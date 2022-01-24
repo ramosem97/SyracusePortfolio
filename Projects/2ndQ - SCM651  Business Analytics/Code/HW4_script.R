@@ -1,0 +1,1 @@
+ub <- read.table("scm651_homework_4_universal_bank.csv", header=TRUE, sep=",", na.strings="NA", dec=".", strip.white=TRUE)
