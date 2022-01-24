@@ -1,0 +1,691 @@
+---
+jupyter:
+  jupytext:
+    formats: ipynb,Rmd
+    text_representation:
+      extension: .Rmd
+      format_name: rmarkdown
+      format_version: '1.2'
+      jupytext_version: 1.11.2
+  kernelspec:
+    display_name: R
+    language: R
+    name: ir
+---
+
+# Imports
+
+```{r}
+library("BayesFactor")
+library("MCMCpack")
+```
+
+# Read Data
+
+
+## US Vaccination Records
+
+
+* DTP1 = First dose of Diphtheria/Pertussis/Tetanus vaccine; 
+* HepB_BD = Hepatitis B, Birth Dose; 
+* Pol3 = Polio third dose;
+* Hib3 – Influenza third dose; 
+* MCV1 = Measles first dose!
+
+```{r}
+load("Data/usVaccines.RData")
+str(usVaccines)
+head(usVaccines)
+```
+
+## School Reports
+
+```{r}
+load("Data/allSchoolsReportStatus.RData")
+str(allSchoolsReportStatus)
+head(allSchoolsReportStatus)
+```
+
+## District 
+
+```{r}
+load("Data/districts21.RData")
+str(districts)
+head(districts)
+```
+
+# Introductory / Descriptive Reports
+
+
+## Question 1
+1.	How have U.S. vaccination rates varied over time? Are vaccination rates increasing or decreasing? Which vaccination has the highest rate at the conclusion of the time series? Which vaccination has the lowest rate at the conclusion of the time series? Which vaccine has the greatest volatility?
+
+
+* DTP1 = First dose of Diphtheria/Pertussis/Tetanus vaccine; 
+* HepB_BD = Hepatitis B, Birth Dose; 
+* Pol3 = Polio third dose;
+* Hib3 – Influenza third dose; 
+* MCV1 = Measles first dose!
+
+```{r}
+head(usVaccines, 1)
+tail(usVaccines, 1)
+```
+
+```{r}
+decOut = decompose(ts(usVaccines, frequency=5))
+plot(decOut$trend)
+plot(decOut$random)
+```
+
+```{r}
+
+```
+
+```{r}
+plot(usVaccines, main='US Vaccination Rates', ylim=c(0, 100))
+```
+
+```{r}
+library(tseries)
+for (col in colnames(usVaccines)) {
+    acf(usVaccines[, col], main=col)
+}
+```
+
+```{r}
+ts.plot(usVaccines)
+```
+
+```{r}
+summary(usVaccines)
+```
+
+```{r}
+plot(diff(usVaccines), main='Change of Rate of US Vaccines')
+summary(diff(usVaccines))
+```
+
+### Solution
+* How have U.S. vaccination rates varied over time? 
+* Are vaccination rates increasing or decreasing? 
+* Which vaccination has the highest rate at the conclusion of the time series? 
+* Which vaccination has the lowest rate at the conclusion of the time series? 
+* Which vaccine has the greatest volatility?
+
+
+## Question 2
+2.	What proportion of public schools reported vaccination data? What proportion of private schools reported vaccination data? Was there any credible difference in overall reporting proportions between public and private schools?
+
+```{r}
+head(allSchoolsReportStatus, 2)
+ct_sch_vax = table(allSchoolsReportStatus[, c("pubpriv", "reported")])
+ct_sch_vax_mar = addmargins(ct_sch_vax)
+ct_sch_vax_perc = 100*ct_sch_vax/ct_sch_vax_mar[c('PRIVATE', 'PUBLIC'), 'Sum']
+ct_sch_vax
+ct_sch_vax_mar
+ct_sch_vax_perc
+```
+
+```{r}
+# Chi-Squared Test for a Categorical Association
+sch_vax_Xsq <- chisq.test(ct_sch_vax)
+sch_vax_Xsq
+sch_vax_exp <- addmargins(sch_vax_Xsq$expect)
+print("Expected Value Table")
+print(sch_vax_exp)
+```
+
+```{r}
+# Anova Contingency Table BF
+ctBFout <- contingencyTableBF(ct_sch_vax,sampleType="poisson", posterior=FALSE)
+print(ctBFout)
+sch_vax_ctMCMCout <- contingencyTableBF(ct_sch_vax,sampleType="poisson", posterior=TRUE,iterations=10000)
+print(summary(sch_vax_ctMCMCout))
+```
+
+```{r tags=c()}
+# BF Contingency Table Posterior Results
+publicProp <- sch_vax_ctMCMCout[,"lambda[1,1]"]/sch_vax_ctMCMCout[,"lambda[1,2]"]
+hist(publicProp)
+abline(v=unname(quantile(publicProp, .5)), col='blue')
+
+privateProp <- sch_vax_ctMCMCout[,"lambda[2,1]"]/sch_vax_ctMCMCout[,"lambda[2,2]"]
+hist(privateProp)
+abline(v=unname(quantile(privateProp, .5)), col='blue')
+
+diffProp <- publicProp-privateProp
+hist(diffProp, main='Histogram of Difference in Proportions')
+abline(v=unname(quantile(diffProp, .5)), col='blue')
+abline(v=unname(quantile(diffProp, .025)), col='red')
+abline(v=unname(quantile(diffProp, .975)), col='red')
+```
+
+### Solution
+* What proportion of public schools reported vaccination data? 
+> 5584/5732 ~ 97.4%
+* What proportion of private schools reported vaccination data? 
+> 1397/1649 ~ 84.7%
+* Was there any credible difference in overall reporting proportions between public and private schools?
+> To check for a difference in Public and Private school vaccination reporting rate, we ran a Chi-Squared Test for a Categorical Association, and its Bayesian equivalent using a Bayes Factor package. In both tests, we found significant evidence to say the proportions of reporting rates are different with the Public Schools reporting rate being higher than Private Schools. The Bayesian Posterior analysis showed the difference in proportions to always be positive in the resulting HDI which means Public Schools are more likely to report vaccination records. Similarly, the Baysian Factor resulted in a value too big to write down which means there is a difference between the two school types. Finally, the frequestist test of chi-squared resulted in a p-value less than 0.05 which means we reject the null of the school types having the same proportions.
+
+
+## Question 3
+3.	What are 2013 vaccination rates for individual vaccines (i.e., DOT, Polio, MMR, and HepB) in California public schools?  How do these rates for individual vaccines in California districts compare with overall US vaccination rates (make an informal comparison to the final observations in the time series)?
+
+
+#### Overall Calculations
+
+```{r}
+districts$WithDTP <- districts$Enrolled - districts$WithoutDTP*(districts$Enrolled/100)
+districts$WithPolio <- districts$Enrolled - districts$WithoutPolio*(districts$Enrolled/100)
+districts$WithMMR <- districts$Enrolled - districts$WithoutMMR*(districts$Enrolled/100)
+districts$WithHepB <- districts$Enrolled - districts$WithoutHepB*(districts$Enrolled/100)
+```
+
+```{r}
+sum_dist <- colSums(districts[, c('WithDTP', 'WithPolio','WithMMR', 'WithHepB', 'Enrolled')])
+sum_dist
+sum_dist <- 100*sum_dist[c('WithDTP', 'WithPolio','WithMMR', 'WithHepB')]/sum_dist['Enrolled']
+sum_dist
+```
+
+#### Distribution Calculations
+
+```{r}
+districts$WithDTPPerc <- 100*districts$WithDTP/districts$Enrolled
+districts$WithPolioPerc <- 100*districts$WithPolio/districts$Enrolled
+districts$WithMMRPerc <- 100*districts$WithMMR/districts$Enrolled
+districts$WithHepBPerc <- 100*districts$WithHepB/districts$Enrolled
+```
+
+```{r}
+summary(districts[, c('WithDTPPerc', 'WithPolioPerc','WithMMRPerc', 'WithHepBPerc')])
+```
+
+```{r}
+last_vax_rec = c(tail(usVaccines, 1)[, c('DTP1', 'Pol3', 'MCV1', 'HepB_BD')])
+last_vax_rec
+```
+
+```{r}
+par(mfrow = c(2,2))
+boxplot(districts[, 'WithDTPPerc'], main='DTP1 Vaccination Rates vs US Rates')
+abline(h=last_vax_rec['DTP1'], col="red")
+text(.75,80, "US Rate", col="red")
+
+boxplot(districts[, 'WithPolioPerc'], main='Pol3 Vaccination Rates vs US Rates')
+abline(h=last_vax_rec['Pol3'], col="red")
+text(.75,80, "US Rate", col="red")
+
+boxplot(districts[, 'WithMMRPerc'], main='MCV1 Vaccination Rates vs US Rates')
+abline(h=last_vax_rec['MCV1'], col="red")
+text(.75,80, "US Rate", col="red")
+
+boxplot(districts[, 'WithHepBPerc'], main='HepB Vaccination Rates vs US Rates')
+abline(h=last_vax_rec['HepB_BD'], col="red")
+text(.75,80, "US Rate", col="red")
+
+```
+
+```{r}
+ttest_res$estimate
+ttest_res$p.value
+ttest_res$conf[1]
+ttest_res$conf[2]
+```
+
+```{r}
+seq(1, length(last_vax_rec))
+```
+
+```{r}
+last_vax_rec = c(tail(usVaccines, 1)[, c('DTP1', 'Pol3', 'MCV1', 'HepB_BD')])
+distric_vax_cols = c('WithDTPPerc','WithPolioPerc','WithMMRPerc','WithHepBPerc')
+vax_L = c('DTP1', 'Pol3', 'MCV1', 'HepB_BD')
+ttest_resL = list()
+
+for (i in seq(1, length(last_vax_rec))) {
+    ttest_res = t.test(districts[, distric_vax_cols[i]], mu=last_vax_rec[i])
+    
+    ttest_res <- data.frame(vax = vax_L[i], 
+                          mean = ttest_res$estimate,
+                          p_val = ttest_res$p.value,
+                          conf_int_lower = ttest_res$conf[1],
+                          conf_int_upper = ttest_res$conf[2],
+                          national_rate = last_vax_rec[i]
+                         )  
+    ttest_resL[[i]] <- ttest_res # add it to your list
+}
+
+ttest_res <- do.call(rbind, ttest_resL)
+ttest_res
+```
+
+```{r}
+library("BEST")
+
+last_vax_rec = c(tail(usVaccines, 1)[, c('DTP1', 'Pol3', 'MCV1', 'HepB_BD')])
+distric_vax_cols = c('WithDTPPerc','WithPolioPerc','WithMMRPerc','WithHepBPerc')
+vax_L = c('DTP1', 'Pol3', 'MCV1', 'HepB_BD')
+
+ttest_bf_resL = list()
+
+for (i in seq(1, length(last_vax_rec))) {
+
+    ttest_bf_res = summary(BESTmcmc(districts[, distric_vax_cols[i]], last_vax_rec[i]))['mu1', ]
+    
+    ttest_bf_res <- data.frame(vax = vax_L[i], 
+                          conf_int_lower = ttest_bf_res['HDIlo'],
+                          median = ttest_bf_res['median'],
+                          conf_int_upper = ttest_bf_res['HDIup'],
+                          mean = ttest_bf_res['mean'],
+                          national_rate = last_vax_rec[i]
+                         )  
+    ttest_bf_resL[[i]] <- ttest_bf_res # add it to your list
+}
+
+ttest_bf_res <- do.call(rbind, ttest_bf_resL)
+ttest_bf_res
+```
+
+## Question 4
+4.	Among districts, how are the vaccination rates for individual vaccines related? In other words, if students are missing one vaccine are they missing all of the others?
+- Correlation between numbers missing
+- Check how many schools have equal vax missing in all vaxes
+
+```{r}
+# Check if Percentage is the same for All
+districts$PctNotUpToDate <- 100 - districts$PctUpToDate
+
+districts$WithoutAll <- ifelse(((districts$WithoutDTP==districts$WithoutPolio)
+                                & (districts$WithoutDTP==districts$WithoutMMR)
+                                & (districts$WithoutDTP==districts$WithoutHepB)
+                                & (districts$WithoutDTP==districts$PctNotUpToDate)),"Yes","No")
+
+districts$AllVax <- ifelse((districts$PctUpToDate==100),"Yes","No")
+table(districts[, c('WithoutAll', 'AllVax')])
+
+# If not all individuals are vaccinated, then 161/(496+161) ~ 24.5% of schools have none of them
+```
+
+##### Correlation Analysis Frequentist
+
+```{r}
+# Correlation Analysis Frequentist
+sc_inperf = districts[districts$PctUpToDate!=100, ] # Get inperfect schools (drop 43 schools with perfect vax record)
+
+sc_inperf$Without <- 100-sc_inperf$PctUpToDate
+round(cor(sc_inperf[, c('WithoutDTP', 'WithoutPolio','WithoutMMR', 'WithoutHepB', 'Without')]), 2)
+
+# Perform Corr Test for each Combination
+without_cols <- c('WithoutDTP', 'WithoutPolio','WithoutMMR', 'WithoutHepB', 'Without')
+
+cor_resL = list()
+count <- 1
+for (x in seq(1,length(without_cols)-1)) {
+
+    for (y in seq(x+1,length(without_cols))){
+        
+        
+        cor_res <- cor.test(sc_inperf[, without_cols[x]], sc_inperf[, without_cols[y]]) # Execute Res
+        cor_res <- data.frame(x = without_cols[x], 
+                              y = without_cols[y],
+                              cor = cor_res$estimate,
+                              p_val = cor_res$p.value,
+                              conf_int_lower = cor_res$conf[1],
+                              conf_int_upper = cor_res$conf[2],
+                              num_diff = nrow(sc_inperf[sc_inperf[,without_cols[x]] != sc_inperf[, without_cols[y]], ]),
+                              total = nrow(sc_inperf),
+                              avg_diff = mean(abs(sc_inperf[,without_cols[x]] - sc_inperf[, without_cols[y]]))
+                             )
+        cor_resL[[count]] <- cor_res # add it to your list
+        
+        count <- count + 1
+    }
+}
+
+cor.test(sc_inperf[, 'WithoutDTP'], sc_inperf[, 'WithoutHepB'])
+
+cor_res = do.call(rbind, cor_resL)
+cor_res
+```
+
+##### Correlation Analysis Bayes Factor
+
+```{r}
+cor_post_res[]$quantiles['97.5%']
+```
+
+```{r}
+# Correlation Analysis Bayes Factor
+bfCorTest <- function (x,y) # Get r from BayesFactor
+{
+    zx <- scale(x) # Standardize X
+    zy <- scale(y) # Standardize Y
+    zData <- data.frame(x=zx,rhoNot0=zy) # Put in a data frame
+    bfOut <- generalTestBF(x ~ rhoNot0, data=zData) # linear coefficient
+    mcmcOut <- posterior(bfOut,iterations=10000) # posterior samples
+#     print(summary(mcmcOut[,"rhoNot0"])) # Get the HDI for rho
+#     plot(mcmcOut)
+    return(bfOut) # Return Bayes factor object
+}
+postCorTest <- function (x,y) # Get r from BayesFactor
+{
+    zx <- scale(x) # Standardize X
+    zy <- scale(y) # Standardize Y
+    zData <- data.frame(x=zx,rhoNot0=zy) # Put in a data frame
+    bfOut <- generalTestBF(x ~ rhoNot0, data=zData) # linear coefficient
+    mcmcOut <- posterior(bfOut,iterations=10000) # posterior samples
+#     print(summary(mcmcOut[,"rhoNot0"])) # Get the HDI for rho
+#     plot(mcmcOut)
+    return(mcmcOut) # Return Bayes factor object
+}
+
+
+cor_bf_resL = list()
+count <- 1
+for (x in seq(1,length(without_cols)-1)) {
+    for (y in seq(x+1,length(without_cols))) {
+        cor_bf_res <- bfCorTest(sc_inperf[, without_cols[x]], sc_inperf[, without_cols[y]]) # Execute Res
+        cor_post_res <- summary(postCorTest(sc_inperf[, without_cols[x]], sc_inperf[, without_cols[y]])[, "rhoNot0"]) # Execute Res
+
+        cor_bf_res <- data.frame(x = without_cols[x], 
+                              y = without_cols[y],
+                              bf = extractBF(cor_bf_res)$bf,
+                              conf_int_lower = cor_post_res$quantiles['2.5%'],
+                              median = cor_post_res$quantiles['50%'],
+                              conf_int_upper = cor_post_res$quantiles['97.5%'],
+                              mean = cor_post_res$statistics['Mean'],
+                              sd = cor_post_res$statistics['SD']
+                             )
+        cor_bf_resL[[count]] <- cor_bf_res # add it to your list
+
+        count <- count + 1
+    }
+}
+
+cor_bf_res = do.call(rbind, cor_bf_resL)
+cor_bf_res
+```
+
+### Solution
+Extremly high correlation with DTP, Polio and MMR when at least one individual does not have all vaccines. On the other hand, not having HepB is less correlated to the rest of the vaccines. 
+
+
+# Predictive Analysis
+(For all of these analyses, use PctChildPoverty, PctFreeMeal, PctFamilyPoverty, Enrolled,  and TotalSchools as predictors. Transform variables as necessary to improve prediction and/or interpretability. In general, if there is a Bayesian version of an analysis available, you are expected to run that analysis in addition to the frequentist version of the analysis.)
+
+```{r}
+logistic <- function(logistX)
+{
+  exp(logistX)/(exp(logistX)+1)
+}
+```
+
+```{r}
+pred_cols <- c('PctChildPoverty', 'PctFreeMeal', 'PctFamilyPoverty', 'Enrolled',  'TotalSchools')
+```
+
+```{r}
+par(mfrow = c(3,2))
+for (i in seq(1, length(pred_cols))) {
+    boxplot(districts[, pred_cols[i]], main=paste('Boxplot of', pred_cols[i]), ylab=pred_cols[i])
+}
+```
+
+```{r}
+pairs(districts[, pred_cols])
+```
+
+```{r}
+districts <- districts[districts[, 'TotalSchools']<200, ]
+```
+
+## Question 5
+5.	What variables predict whether or not a district’s reporting was complete?
+
+```{r}
+
+```
+
+```{r}
+pred_col <- 'DistrictComplete'
+pred_col_factor <- paste(pred_col,'Factor', sep="")
+pred_col_num <- paste(pred_col,'Num', sep="")
+
+districts[, pred_col_factor] <- factor(districts$DistrictComplete, labels=c(0, 1))
+districts[, pred_col_num] <- as.numeric(districts$DistrictCompleteFactor) - 1
+```
+
+```{r}
+hist(districts[, pred_col_num], main=paste('Histogram of', pred_col), xlab=pred_col)
+```
+
+```{r}
+cols <- character(nrow(districts))
+cols[] <- "black"
+cols[districts[, pred_col] == TRUE] <- "green"
+cols[districts[, pred_col] == FALSE] <- "red"
+
+pairs(districts[, pred_cols], col=cols)
+cor(districts[, pred_cols])
+```
+
+```{r}
+by(districts[,append(pred_cols, c(pred_col))], districts[, pred_col], function(x) {cor(x[, 1:5])})
+```
+
+#### GSL with Logistic Regression
+
+
+##### Linear Regression for Collinearity Frequentist
+
+```{r}
+formula_str = paste(pred_col_factor, ' ~ PctChildPoverty + PctFreeMeal + PctFamilyPoverty + Enrolled + TotalSchools')
+glmOut <- glm(formula_str, data=districts, family=binomial())
+summary(glmOut)
+exp(confint(glmOut))
+anova(glmOut, test="Chisq") # Compare null model to one predictor
+round(coef(glmOut), 2)# Convert log odds to odds (Intercept) logistX
+round(exp(coef(glmOut)), 2)# Convert log odds to odds (Intercept) logistX
+```
+
+```{r}
+par(mfrow = c(3,2))
+for (x in pred_cols){
+    plot(districts[, pred_col], districts[, x], 
+         ylab=x, xlab=pred_col, 
+         ylim=c(quantile(districts[, x], .025), quantile(districts[, x], .975)))
+    abline(a=exp(coef(glmOut))[x], b=exp(coef(glmOut))['(Intercept)'], col = "red")
+}
+```
+
+```{r}
+districts[, 'Enrolled100'] <- districts[, 'Enrolled']/100
+
+formula_str = paste(pred_col_factor, ' ~ PctChildPoverty + PctFreeMeal + PctFamilyPoverty + Enrolled100 + TotalSchools')
+glmOut <- glm(formula_str, data=districts, family=binomial())
+summary(glmOut)
+exp(confint(glmOut))
+anova(glmOut, test="Chisq") # Compare null model to one predictor
+round(exp(coef(glmOut)), 3)# Convert log odds to odds (Intercept) logistX
+```
+
+##### Linear Regression for Collinearity Bayesian
+
+```{r}
+formula_str = paste(pred_col_num, '~ PctChildPoverty + PctFreeMeal + PctFamilyPoverty + Enrolled100 + TotalSchools')
+regOutMCMC <- lmBF(as.formula(formula_str), data=districts, posterior=TRUE, iterations=10000)
+summary(regOutMCMC)
+```
+
+```{r}
+formula_str = paste(pred_col_num, '~ PctChildPoverty + PctFreeMeal + PctFamilyPoverty + Enrolled100 + Enrolled100 + TotalSchools')
+bayesLogitOut <- MCMClogit(formula =as.formula(formula_str), data=districts) 
+summary(bayesLogitOut) # Summarize the results
+plot(bayesLogitOut)
+```
+
+```{r}
+exp(summary(bayesLogitOut)$statistics[, 'Mean'])
+```
+
+```{r}
+par(mfrow = c(3,2))
+for (x in c('PctChildPoverty','PctFreeMeal','PctFamilyPoverty','Enrolled100','TotalSchools')) {
+    odds <- as.matrix(bayesLogitOut[,x]) # Create a matrix for apply() 
+    odds <- apply(odds,1,exp) # apply() runs exp() for each one 
+    hist(odds, xlab=x) # Show a histogram 
+    abline(v=quantile(odds,c(0.025)),col="red") # Left edge of 95% HDI 
+    abline(v=quantile(odds,c(0.975)),col="red") # Right edge of 95% HDI
+}
+```
+
+## Question 6
+6.	What variables predict the percentage of all enrolled students with completely up-to-date vaccines?
+
+```{r}
+pred_col <- 'PctUpToDate'
+```
+
+```{r}
+boxplot(districts[, pred_col], main=paste('Boxplot of', pred_col), xlab=pred_col)
+```
+
+```{r}
+pairs(districts[, append(pred_cols, c(pred_col))], col=cols)
+cor(districts[,append(pred_cols, c(pred_col))])
+```
+
+#### GSM with Logistic Regression
+
+
+##### Linear Regression for Collinearity Frequentist
+
+```{r}
+formula_str = paste(pred_col, ' ~ PctChildPoverty + PctFreeMeal + PctFamilyPoverty + Enrolled + TotalSchools')
+lmOut <- lm(formula_str, data=districts)
+summary(lmOut)
+round(coef(lmOut), 3)
+```
+
+```{r}
+par(mfrow = c(3,2))
+for (x in pred_cols){
+    plot(districts[, x], districts[, pred_col], xlab=x, ylab=pred_col)
+    abline(lmOut$coefficients[c('(Intercept)', x)], col = "black")
+}
+```
+
+##### Linear Regression for Collinearity Bayesian
+
+```{r}
+summary(regOutMCMC)$statistics[, 'Mean']
+```
+
+```{r}
+formula_str = paste(pred_col, '~ PctChildPoverty + PctFreeMeal + PctFamilyPoverty + Enrolled + TotalSchools')
+regOutMCMC <- lmBF(as.formula(formula_str), data=districts, posterior=TRUE, iterations=10000)
+regOutBF <- lmBF(as.formula(formula_str), data=districts)
+summary(regOutMCMC)
+summary(regOutMCMC)$statistics[, 'Mean']
+regOutBF
+```
+
+```{r}
+plot(regOutMCMC)
+```
+
+```{r}
+rsqList <- 1 - (regOutMCMC[,"sig2"] / var(districts[, pred_col])) # sig2 from lmBF() estimates error variance
+
+par(mfrow = c(3,2))
+
+for (x in pred_cols){
+    hist(regOutMCMC[,x], xlab=x, main=paste('Histogram of Posterior Prob of', x))
+    abline(v=quantile(regOutMCMC[,x],c(0.025)), col="red") 
+    abline(v=quantile(regOutMCMC[,x],c(0.975)), col="red")
+}
+
+mean(rsqList) # Overall mean R-squared is 0.75 
+hist(rsqList, main='Histogram of R-squared Posterior Values') # Show a histogram
+# Lower bound of the 95% HDI 
+abline(v=quantile(rsqList,c(0.025)), col="red")
+# Upper bound of the 95% HDI 
+abline(v=quantile(rsqList,c(0.975)), col="red")
+```
+
+## Question 7
+7.	What variables predict the percentage of all enrolled students with belief exceptions?
+
+```{r}
+pred_col <- 'PctBeliefExempt'
+```
+
+```{r}
+boxplot(districts[, pred_col], main=paste('Boxplot of', pred_col), xlab=pred_col)
+```
+
+```{r}
+pairs(districts[, append(pred_cols, c(pred_col))], col=cols)
+cor(districts[,append(pred_cols, c(pred_col))])
+```
+
+#### GSM with Logistic Regression
+
+
+##### Linear Regression for Collinearity Frequentist
+
+```{r}
+formula_str = paste(pred_col, ' ~ PctChildPoverty + PctFreeMeal + PctFamilyPoverty + Enrolled + TotalSchools')
+lmOut <- lm(formula_str, data=districts)
+summary(lmOut)
+confint(lmOut)
+coef(lmOut)
+```
+
+```{r}
+par(mfrow = c(3,2))
+for (x in pred_cols){
+    plot(districts[, x], districts[, pred_col], xlab=x, ylab=pred_col)
+    abline(lmOut$coefficients[c('(Intercept)', x)], col = "black")
+}
+```
+
+##### Linear Regression for Collinearity Bayesian
+
+```{r}
+formula_str = paste(pred_col, '~ PctChildPoverty + PctFreeMeal + PctFamilyPoverty + Enrolled + TotalSchools')
+regOutMCMC <- lmBF(as.formula(formula_str), data=districts, posterior=TRUE, iterations=10000)
+regOutBF <- lmBF(as.formula(formula_str), data=districts)
+summary(regOutMCMC)
+summary(regOutMCMC)$statistics[, 'Mean']
+regOutBF
+```
+
+```{r}
+rsqList <- 1 - (regOutMCMC[,"sig2"] / var(districts[, pred_col])) # sig2 from lmBF() estimates error variance
+
+par(mfrow = c(3,2))
+
+for (x in pred_cols){
+    hist(regOutMCMC[,x], xlab=x, main=paste('Histogram of Posterior Prob of', x))
+    abline(v=quantile(regOutMCMC[,x],c(0.025)), col="red") 
+    abline(v=quantile(regOutMCMC[,x],c(0.975)), col="red")
+}
+
+mean(rsqList) # Overall mean R-squared is 0.75 
+hist(rsqList, main='Histogram of R-squared Posterior Values') # Show a histogram
+# Lower bound of the 95% HDI 
+abline(v=quantile(rsqList,c(0.025)), col="red")
+# Upper bound of the 95% HDI 
+abline(v=quantile(rsqList,c(0.975)), col="red")
+```
+
+## Question 8
+8.	What’s the big picture, based on all of the foregoing analyses? The staff member in the state legislator’s office is interested to know how to allocate financial assistance to school districts to improve both their vaccination rates and their reporting compliance. What have you learned from the data and analyses that might inform this question?
+
+```{r}
+
+```
