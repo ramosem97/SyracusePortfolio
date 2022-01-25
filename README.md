@@ -2,8 +2,9 @@
 
 ## -	Portfolio: 
     Portfolio.docx/pdf
+    PortfolioDraft.docx
 ## -	Resume: 
-    Emilio_Ramos_Monzalvo_Resume.docx/pdf
+    Emilio_Ramos_Monzalvo_Resume.pdf
 ## -	Projects:
 
 ### o	IST659 – Data Admin & Management – 1st Quarter
