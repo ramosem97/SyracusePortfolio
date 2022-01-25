@@ -56,8 +56,8 @@
         • D.S. Tech:  Decision Tree, Random Forest, Data Prep, Visualization
 
 ### o IST718 – Big Data Analytics – 4th Quarter
-    -	Syllabus: IST_718_Syllabus.pdf
-    -	Project: For the final project, students will identify a data-focused problem, bring together different data sources, conduct analysis, draw conclusions, and produce a report explaining the results
+    - Syllabus: IST_718_Syllabus.pdf
+    - Project: For the final project, students will identify a data-focused problem, bring together different data sources, conduct analysis, draw conclusions, and produce a report explaining the results
         •	Description: Using a classified flower photo dataset, a deep neural network model was trained to classify them accordingly.
         •	File(s): 
             o Project Desc: final_project_report_instructions.pdf
