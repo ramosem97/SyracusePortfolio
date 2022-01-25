@@ -7,34 +7,34 @@
 ## -	Projects
 
 ### o	IST659 – Data Admin & Management – 1st Quarter
-	Syllabus: IST_659_Syllabus.pdf
-	Project: NFL Weekly game Prediction Database
-•	Description: Created a schema and database used to keep track of NLF games’ score, prediction, and accuracy.
-•	File(s): 
-o	Project Rubric: IST659+Project+Description.pdf
-o	Report:
-	Deliverable1_Emilio_Ramos_Monzalvo.docx
-	Deliverable2_Emilio_Ramos_Monzalvo.docx
-•	D.S. Tech:
-o	Database: SQL, DB Schema, DB Creation.
+    	Syllabus: IST_659_Syllabus.pdf
+    	Project: NFL Weekly game Prediction Database
+        •	Description: Created a schema and database used to keep track of NLF games’ score, prediction, and accuracy.
+        •	File(s): 
+            o	Project Rubric: IST659+Project+Description.pdf
+            o	Report:
+                	Deliverable1_Emilio_Ramos_Monzalvo.docx
+                	Deliverable2_Emilio_Ramos_Monzalvo.docx
+        •	D.S. Tech:
+            o	Database: SQL, DB Schema, DB Creation.
 
 ### o	MCB638 – Data Analysis and Decision Making – 1st Quarter
-	Syllabus: MBC_638_Syllabus.pdf
-	Project: Improve the process of predicting NLF game’s score.
-•	Description: Using python and other data science techniques, historical data of the Ramos’ family NLF game predicting from 2008 onwards was analyzed to find patterns on teams that win.
-•	File(s): 
-o	Report: StoryBoard.pptx
-•	D.S. Tech: Hypothesis Testing, Data Frames, Python, Data Visualization, Data Analysis, and Confidence Interval.
+    	Syllabus: MBC_638_Syllabus.pdf
+    	Project: Improve the process of predicting NLF game’s score.
+        •	Description: Using python and other data science techniques, historical data of the Ramos’ family NLF game predicting from 2008 onwards was analyzed to find patterns on teams that win.
+        •	File(s): 
+            o	Report: StoryBoard.pptx
+        •	D.S. Tech: Hypothesis Testing, Data Frames, Python, Data Visualization, Data Analysis, and Confidence Interval.
 
 ### o	IST 687 – Applied Data Science – 2nd Quarter
-	Syllabus: IST_687_Syllabus.pdf
-	Project: Use data transformation and analysis skills to understand and visualize different patterns on unclean data.
-•	Description: Work on a Dataset of the Foreign Assistance from the U.S. to Columbia, transform the data as needed, and provide a written analysis with visualizations.
-•	File(s):
-o	Report: Final_Report.docx
-o	Presentation: Project_Update.pptx
-o	Other: Tables.xlsx
-•	D.S. Tech: R programming, data wrangling, data visualization.
+    	Syllabus: IST_687_Syllabus.pdf
+    	Project: Use data transformation and analysis skills to understand and visualize different patterns on unclean data.
+        •	Description: Work on a Dataset of the Foreign Assistance from the U.S. to Columbia, transform the data as needed, and provide a written analysis with visualizations.
+        •	File(s):
+            o	Report: Final_Report.docx
+            o	Presentation: Project_Update.pptx
+            o	Other: Tables.xlsx
+        •	D.S. Tech: R programming, data wrangling, data visualization.
 
 ### o	SCM651 – Business Analytics – 2nd Quarter
 	Syllabus: SCM_651_Syllabus.pdf
