@@ -60,9 +60,9 @@
     -	Project: For the final project, students will identify a data-focused problem, bring together different data sources, conduct analysis, draw conclusions, and produce a report explaining the results
         •	Description: Using a classified flower photo dataset, a deep neural network model was trained to classify them accordingly.
         •	File(s): 
-            o	Project Desc: final_project_report_instructions.pdf
-            o	Results: FlowerRec.pdf
-            o	Statement: IST 718 Final Group Project Statement.docx
+            o Project Desc: final_project_report_instructions.pdf
+            o Results: FlowerRec.pdf
+            o Statement: IST 718 Final Group Project Statement.docx
         •	D.S. Tech: Deep Neural Networks, Computer Vision, Code Pipeline, Model Comparison, Image Data
 
 ### o IST664 - Natural Language Processing – 5th Quarter
