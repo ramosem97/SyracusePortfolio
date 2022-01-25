@@ -4,7 +4,7 @@
     Portfolio.docx/pdf
 ## -	Resume: 
     Emilio_Ramos_Monzalvo_Resume.docx/pdf
-## -	Projects
+## -	Projects:
 
 ### o	IST659 – Data Admin & Management – 1st Quarter
     -	Syllabus: IST_659_Syllabus.pdf
@@ -37,8 +37,8 @@
         •	D.S. Tech: R programming, data wrangling, data visualization.
 
 ### o	SCM651 – Business Analytics – 2nd Quarter
--	Syllabus: SCM_651_Syllabus.pdf
--	Project: Determine if an individual will get a loan or not using  linear regressions.
+    -	Syllabus: SCM_651_Syllabus.pdf
+    -	Project: Determine if an individual will get a loan or not using  linear regressions.
     •	Description: Using the Universal Bank data, determine the factors which influence whether a customer takes out a loan.
     •	File(s):
             o	Project Desc: SCM651_HW4.pdf
