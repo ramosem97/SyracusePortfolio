@@ -1,5 +1,5 @@
 # Syracuse Portfolio
-Welcome to the Applied Data Science Masters Portfolio of Emilio Ramos Monzalvo. To navigate the Project Folder, please find the Projects sections below. A couple of Projects were chosen to be detailed thoroughly under the Portfolio.docx document or the PortfolioPresentation.pptx.
+Welcome to the Applied Data Science Masters Portfolio of Emilio Ramos Monzalvo. To navigate the Project Folder, please find the Projects sections below. A couple of Projects were highlighted in the Portfolio.docx document or the PortfolioPresentation.pptx. The personal statement is also included under the Portfolio.docx document.
 
 ## - Portfolio: 
     Portfolio.docx
