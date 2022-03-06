@@ -3,6 +3,7 @@ Welcome to the Applied Data Science Masters Portfolio of Emilio Ramos Monzalvo. 
 
 ## - Portfolio: 
     Portfolio.docx
+    PortfolioPresentation.pptx
 ## - Resume: 
     Emilio_Ramos_Monzalvo_Resume.pdf
 ## - Projects:
