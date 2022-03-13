@@ -1,6 +1,4 @@
 ## Get Rid off of Old Files
-Old/*
-Old\*.docx
-Old\*
-Old\PortfolioDraft.docx
-Old
+/Old/*
+/Old/*.docx
+/Old
